@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STUDY CLOCK V16 - ZEN</title>
+    <title>STUDY CLOCK V17 - RESTORE LOGIN</title>
     <style>
         :root {
             --bg: #1e1e20;
@@ -27,7 +27,31 @@
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        @keyframes breathing {
+            0% { box-shadow: 0 0 0px 0px rgba(0, 0, 0, 0), 0 0 15px rgba(0, 0, 0, 0); }
+            50% { box-shadow: 0 0 15px 0px rgba(0, 0, 0, 0), 0 0 25px rgba(0, 0, 0, 0.2); }
+            100% { box-shadow: 0 0 0px 0px rgba(0, 0, 0, 0), 0 0 15px rgba(0, 0, 0, 0); }
+        }
 
+        body.zen-mode { padding: 0; align-items: center; }
+        body.zen-mode .container { grid-template-columns: 1fr; max-width: 900px; gap: 0; }
+        body.zen-mode .right-col, body.zen-mode #settings-card, body.zen-mode .card-header button, body.zen-mode .video-settings { display: none !important; }
+        body.zen-mode .card { margin-bottom: 20px; border: none; background: transparent; box-shadow: none; }
+        body.zen-mode #clock-card .sys-time { font-size: 8rem; text-shadow: 0 0 30px rgba(0,0,0,0.5); }
+        body.zen-mode #video-card .video-frame { height: 60vh; border: none; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+
+        /* 状态光效 */
+        #clock-card.focus-glow {
+            border-color: var(--accent); box-shadow: 0 0 30px rgba(77, 170, 252, 0.4);
+            animation: breathing 4s infinite ease-in-out;
+        }
+        #clock-card.break-glow {
+            border-color: var(--success); box-shadow: 0 0 30px rgba(129, 201, 149, 0.4);
+            animation: breathing 4s infinite ease-in-out;
+        }
+
+        /* --- Standard Styles --- */
         .container {
             width: 100%; max-width: 1100px;
             display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px;
@@ -35,30 +59,10 @@
         }
         @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
 
-        /* --- ZEN MODE STYLES --- */
-        body.zen-mode { padding: 0; align-items: center; }
-        body.zen-mode .container { 
-            grid-template-columns: 1fr; max-width: 900px; gap: 0;
-        }
-        body.zen-mode .right-col, 
-        body.zen-mode #settings-card, 
-        body.zen-mode .card-header button, /* 隐藏卡片头部的按钮 */
-        body.zen-mode .video-settings {    /* 隐藏视频设置 */
-            display: none !important; 
-        }
-        body.zen-mode .card {
-            margin-bottom: 20px; border: none; background: transparent; box-shadow: none;
-        }
-        body.zen-mode #clock-card .sys-time { font-size: 8rem; text-shadow: 0 0 30px rgba(0,0,0,0.5); }
-        body.zen-mode #video-card .video-frame { height: 60vh; border: none; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
-
-        /* --- Standard Styles --- */
         .card {
             background: var(--card); border: 1px solid var(--card-border);
-            border-radius: 10px; padding: 18px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            display: flex; flex-direction: column; position: relative;
-            transition: all 0.5s ease;
+            border-radius: 10px; padding: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column; position: relative; transition: all 0.5s ease;
         }
         .card.resizable { resize: vertical; overflow: auto; border: 1px dashed #666; box-shadow: none; flex: none !important; min-height: 100px; }
         .card.resizable::after { content: ""; position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; background: linear-gradient(135deg, transparent 50%, var(--accent) 50%); pointer-events: none; }
@@ -76,12 +80,9 @@
         .btn-ghost:hover { background: #444; color: #fff; }
         
         input, textarea {
-            background: var(--input-bg); border: 1px solid #444; color: #fff;
-            padding: 8px; border-radius: 4px; width: 100%; font-size: 0.85rem;
+            background: var(--input-bg); border: 1px solid #444; color: var(--text); padding: 8px; border-radius: 4px; width: 100%; font-size: 0.85rem;
         }
         input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-
-        /* Range Slider */
         input[type=range] { -webkit-appearance: none; background: transparent; padding: 0; }
         input[type=range]::-webkit-slider-runnable-track { height: 4px; background: #444; border-radius: 2px; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: var(--accent); margin-top: -5px; cursor: pointer; }
@@ -92,13 +93,11 @@
         
         .add-btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 5px; }
         .add-btn { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 10px 0; border-radius: 6px; font-weight: 600; font-size: 0.9rem; transition: transform 0.1s, opacity 0.2s; }
-        .add-btn:active { transform: scale(0.96); } .add-btn:hover { opacity: 0.9; }
         .btn-class { background: rgba(77, 170, 252, 0.15); color: var(--accent); border: 1px solid rgba(77, 170, 252, 0.3); }
         .btn-small { background: rgba(129, 201, 149, 0.15); color: var(--success); border: 1px solid rgba(129, 201, 149, 0.3); }
         .btn-big { background: rgba(229, 192, 123, 0.15); color: var(--warn); border: 1px solid rgba(229, 192, 123, 0.3); }
 
-        .block-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 8px 10px; display: flex; gap: 10px; align-items: center; animation: slideIn 0.3s ease; transition: background 0.2s; }
-        .block-item:hover { background: rgba(255,255,255,0.06); border-color: #555; }
+        .block-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 8px 10px; display: flex; gap: 10px; align-items: center; transition: background 0.2s; }
         .drag-handle { cursor: grab; color: #555; font-size: 1.2rem; padding: 0 4px; }
         .time-input-wrapper { position: relative; width: 60px; display: flex; align-items: center; background: #111; border-radius: 4px; padding: 4px; border: 1px solid #333; }
         .time-input { width: 100%; text-align: center; font-weight: bold; color: var(--accent); padding: 0; border: none; background: transparent; -moz-appearance: textfield; }
@@ -112,20 +111,8 @@
         .todo-item { display: flex; justify-content: space-between; padding: 10px 8px; border-bottom: 1px solid #333; font-size: 0.9rem; }
         .todo-item.done span { text-decoration: line-through; opacity: 0.5; }
 
-        /* Floating Buttons */
-        .float-container { position: fixed; bottom: 30px; left: 30px; display: flex; gap: 10px; z-index: 100; }
-        .float-btn {
-            background: rgba(30, 30, 32, 0.9); border: 1px solid #555; color: #ccc;
-            padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: bold; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4); transition: 0.3s;
-        }
-        .float-btn:hover { border-color: #fff; color: #fff; }
-        .float-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-        .zen-btn { color: var(--success); border-color: var(--success); }
-        .zen-btn:hover { background: var(--success); color: #000; }
-
         .timer-box { text-align: center; padding: 15px 0; }
-        .sys-time { font-size: 4.5rem; font-weight: 700; line-height: 1; color: #fff; font-variant-numeric: tabular-nums; text-shadow: 0 2px 10px rgba(0,0,0,0.3); transition: font-size 0.5s; }
+        .sys-time { font-size: 4.5rem; font-weight: 700; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; text-shadow: 0 2px 10px rgba(0,0,0,0.3); transition: font-size 0.5s; }
         .countdown-area { margin-top: 10px; opacity: 0.8; }
         .countdown-val { font-family: monospace; color: var(--accent); font-weight: bold; font-size: 1.2rem; }
         .status-pill { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-top: 10px; background: #333; color: #aaa; }
@@ -134,11 +121,21 @@
         .progress-bar { height: 4px; background: #111; margin-top: 20px; border-radius: 2px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 1s linear; }
         
-        .video-frame { position: relative; padding-bottom: 56.25%; background: #000; border-radius: 6px; overflow: hidden; margin-bottom: 10px; border: 1px solid #333; transition: height 0.5s; }
+        .video-frame { position: relative; padding-bottom: 56.25%; background: #000; border-radius: 6px; overflow: hidden; margin-bottom: 10px; border: 1px solid #333; }
         .video-frame iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
         .video-settings { display: none; flex-direction: column; gap: 10px; border-top: 1px solid #333; padding-top: 10px; margin-top: 10px; animation: slideIn 0.3s ease; }
         .video-settings.show { display: flex; }
         .preset-tag { background: #333; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; margin-right: 5px; display: inline-block; margin-bottom: 5px; }
+        
+        .float-container { position: fixed; bottom: 30px; left: 30px; display: flex; gap: 10px; z-index: 100; }
+        .float-btn {
+            background: rgba(30, 30, 32, 0.9); border: 1px solid #555; color: #ccc;
+            padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: bold; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4); transition: 0.3s;
+        }
+        .float-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .zen-btn { color: var(--success); border-color: var(--success); }
+        .zen-btn:hover { background: var(--success); color: #000; }
         
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
@@ -166,7 +163,7 @@
             <div class="video-frame" id="video-box"><div style="position:absolute;width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#555;">NO VIDEO</div></div>
             <div class="video-settings" id="video-settings">
                 <div style="display:flex; justify-content:flex-end; margin-bottom:5px;">
-                    <span style="font-size:0.7rem; color:var(--accent); cursor:pointer;" onclick="toggleEmbedMode()" id="mode-switch-txt">切换到：嵌入代码模式</span>
+                    <span style="font-size:0.7rem; color:var(--accent); cursor:pointer;" onclick="toggleEmbedMode()" id="mode-switch-txt">切换到：嵌入代码模式 (解决报错)</span>
                 </div>
                 <div id="input-mode-link" style="display:block;">
                     <div style="display:flex; gap:5px; margin-bottom:5px;">
@@ -243,24 +240,22 @@
     <button class="float-btn" id="layout-btn" onclick="toggleLayout()">🔓 调整布局</button>
     <button class="float-btn zen-btn" onclick="toggleZen()">🧘 专注模式</button>
 </div>
-
 <audio id="bell-audio"></audio>
 
 <script>
     const DEFAULT_BELL = "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3";
     const DEFAULT_VIDEO = "https://www.youtube.com/watch?v=jfKfPfyJRdk";
     
-    // Init Data
-    let blocks = JSON.parse(localStorage.getItem('v16_blocks')) || [
+    let blocks = JSON.parse(localStorage.getItem('v14_blocks')) || [
         { type: 'class', name: '第一节课', duration: 50 },
         { type: 'small', name: '休息', duration: 10 },
         { type: 'class', name: '第二节课', duration: 50 },
     ];
-    let presets = JSON.parse(localStorage.getItem('v16_presets')) || [
+    let presets = JSON.parse(localStorage.getItem('v14_presets')) || [
         { name: "Lofi Girl", url: DEFAULT_VIDEO },
         { name: "B站雨声", url: "https://www.bilibili.com/video/BV1bJ411r76H" }
     ];
-    let startTime = localStorage.getItem('v16_start') || "08:00";
+    let startTime = localStorage.getItem('v14_start') || "08:00";
     let schedule = [];
     let audioEnabled = false;
     let isLayoutEdit = false;
@@ -271,9 +266,8 @@
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('start-time').value = startTime;
         
-        // Audio & Vol
-        const savedAudioUrl = localStorage.getItem('v16_audio_url');
-        const savedVol = localStorage.getItem('v16_vol') || 1;
+        const savedAudioUrl = localStorage.getItem('v14_audio_url');
+        const savedVol = localStorage.getItem('v14_vol') || 1;
         document.getElementById('bell-audio').volume = savedVol;
         document.getElementById('vol-control').value = savedVol;
 
@@ -286,7 +280,7 @@
             document.getElementById('audio-current').innerText = "当前: 默认铃声";
         }
 
-        const savedVid = localStorage.getItem('v16_video') || DEFAULT_VIDEO;
+        const savedVid = localStorage.getItem('v14_video') || DEFAULT_VIDEO;
         document.getElementById('video-url').value = savedVid;
         loadVideo(savedVid);
 
@@ -298,7 +292,6 @@
         }, 1000);
     });
 
-    // --- Core Features ---
     function toggleZen() {
         isZen = !isZen;
         if(isZen) document.body.classList.add('zen-mode');
@@ -329,11 +322,10 @@
             schedule.push({...b, start: new Date(t), end: e}); t = e;
         });
         renderView(); renderEdit();
-        localStorage.setItem('v16_blocks', JSON.stringify(blocks));
-        localStorage.setItem('v16_start', startTime);
+        localStorage.setItem('v14_blocks', JSON.stringify(blocks));
+        localStorage.setItem('v14_start', startTime);
     }
 
-    // --- Rendering ---
     function renderView() {
         const c = document.getElementById('view-box'); c.innerHTML = '';
         schedule.forEach((s, i) => {
@@ -370,7 +362,10 @@
         let cur=null, idx=-1;
         for(let i=0; i<schedule.length; i++) { if(now>=schedule[i].start && now<schedule[i].end) { cur=schedule[i]; idx=i; break; } }
         document.querySelectorAll('.sched-item').forEach(e=>e.classList.remove('active'));
-        const tNum=document.getElementById('timer-num'), tTxt=document.getElementById('timer-text'), tag=document.getElementById('status-tag'), bar=document.getElementById('progress-fill');
+        const tNum=document.getElementById('timer-num'), tTxt=document.getElementById('timer-text'), tag=document.getElementById('status-tag'), bar=document.getElementById('progress-fill'), clockCard=document.getElementById('clock-card');
+        
+        clockCard.classList.remove('focus-glow', 'break-glow');
+
         if(cur) {
             const r = document.getElementById(`sched-${idx}`); if(r) r.classList.add('active');
             const diff = cur.end - now;
@@ -378,56 +373,61 @@
             tNum.innerText = `-${pad(m)}:${pad(s)}`; tTxt.innerText = `距离 ${cur.name} 结束`;
             tag.innerText = cur.type==='class'?'专注中':'休息中'; tag.className = `status-pill ${cur.type==='class'?'active':'break'}`;
             bar.style.width = ((now-cur.start)/(cur.end-cur.start)*100)+'%';
+            
+            if (cur.type === 'class') clockCard.classList.add('focus-glow');
+            else clockCard.classList.add('break-glow');
+
             if(idx!==lastIdx && lastIdx!==-1 && audioEnabled) document.getElementById('bell-audio').play();
             lastIdx=idx;
         } else { tNum.innerText = "--:--"; tTxt.innerText="等待中..."; tag.innerText="待机"; tag.className="status-pill"; bar.style.width="0%"; }
     }
 
-    // --- Video ---
     function toggleVideoSet() { document.getElementById('video-settings').classList.toggle('show'); }
+    
     function toggleEmbedMode() {
         isCodeMode = !isCodeMode;
         document.getElementById('input-mode-link').style.display = isCodeMode ? 'none' : 'block';
         document.getElementById('input-mode-code').style.display = isCodeMode ? 'block' : 'none';
-        document.getElementById('mode-switch-txt').innerText = isCodeMode ? '切换回：链接模式' : '切换到：嵌入代码模式';
+        document.getElementById('mode-switch-txt').innerText = isCodeMode ? '切换回：链接模式' : '切换到：嵌入代码模式 (解决报错)';
     }
-    function loadEmbedCode() {
-        const code = document.getElementById('video-code').value;
-        if(code) document.getElementById('video-box').innerHTML = code;
-    }
+
+    function loadEmbedCode() { const code = document.getElementById('video-code').value; if(code) document.getElementById('video-box').innerHTML = code; }
+    
     function loadVideo(u) {
         const url = u || document.getElementById('video-url').value; if(!url) return;
-        localStorage.setItem('v16_video', url);
+        localStorage.setItem('v14_video', url);
         const box = document.getElementById('video-box'); let c = "";
         if(url.includes('bilibili')||url.startsWith('BV')) { 
-            const b = url.match(/BV\w+/); if(b) c=`<iframe src="//player.bilibili.com/player.html?isOutside=true&bvid=${b[0]}&page=1&high_quality=1&danmaku=0&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>`; 
+            const b = url.match(/BV\w+/); 
+            if(b) c=`<iframe src="//player.bilibili.com/player.html?isOutside=true&bvid=${b[0]}&page=1&high_quality=1&danmaku=0&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>`; 
         } else if(url.includes('youtu')) { 
             let v=""; try{if(url.includes('v='))v=url.split('v=')[1].split('&')[0];else if(url.includes('.be/'))v=url.split('.be/')[1].split('?')[0];}catch(e){} 
-            if(v) c=`<iframe src="https://www.youtube-nocookie.com/embed/${v}?autoplay=1&mute=1&loop=1&playlist=${v}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`; 
+            if(v) c=`<iframe src="https://www.youtube.com/embed/${v}?autoplay=1&mute=1&loop=1&playlist=${v}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`; 
         }
         if(c) box.innerHTML = c;
     }
+
     function renderPresets() {
         const c=document.getElementById('preset-list'); c.innerHTML='';
-        presets.forEach((p,i)=>{ const s=document.createElement('span'); s.className='preset-tag'; s.innerHTML=`<span onclick="loadVideo('${p.url}')">▶ ${p.name}</span> <span style="color:#666" onclick="presets.splice(${i},1);localStorage.setItem('v16_presets',JSON.stringify(presets));renderPresets()">×</span>`; c.appendChild(s); });
+        presets.forEach((p,i)=>{ const s=document.createElement('span'); s.className='preset-tag'; s.innerHTML=`<span onclick="loadVideo('${p.url}')">▶ ${p.name}</span> <span style="color:#666" onclick="presets.splice(${i},1);localStorage.setItem('v14_presets',JSON.stringify(presets));renderPresets()">×</span>`; c.appendChild(s); });
     }
-    function addPreset() { const u=document.getElementById('video-url').value; if(u) { const n=prompt("名称:", "新预设"); if(n) { presets.push({name:n,url:u}); localStorage.setItem('v16_presets',JSON.stringify(presets)); renderPresets(); } } }
-
-    // --- Audio & Utils ---
-    function setVolume(val) { document.getElementById('bell-audio').volume = val; localStorage.setItem('v16_vol', val); }
+    function addPreset() { const u=document.getElementById('video-url').value; if(u) { const n=prompt("名称:", "新预设"); if(n) { presets.push({name:n,url:u}); localStorage.setItem('v14_presets',JSON.stringify(presets)); renderPresets(); } } }
+    function toggleEdit() { const v=document.getElementById('view-box'), e=document.getElementById('edit-box'), b=document.getElementById('edit-btn'); if(v.style.display==='none'){ v.style.display='block'; e.classList.remove('show'); b.innerText='✎ 编辑'; } else{ v.style.display='none'; e.classList.add('show'); b.innerText='👁 完成'; } }
+    function addBlock(t) { blocks.push({type:t, name:t==='class'?'课程':(t==='big'?'大休':'休息'), duration:t==='class'?50:(t==='big'?60:10)}); recalc(); }
+    
+    function setVolume(val) { document.getElementById('bell-audio').volume = val; localStorage.setItem('v14_vol', val); }
     function enableAudio() { const a=document.getElementById('bell-audio'); a.play().then(()=>{a.pause();a.currentTime=0;audioEnabled=true;document.getElementById('bell-status').innerText="🔔 已开启";document.getElementById('bell-status').style.color="#81c995";}); }
     function upAudio(f) { if(f.files[0]){ const u = URL.createObjectURL(f.files[0]); document.getElementById('bell-audio').src=u; document.getElementById('audio-current').innerText="当前: 本地上传 (临时)"; if(audioEnabled)document.getElementById('bell-audio').play(); } }
     function setOnlineAudio(url) {
         if(!url) return;
         document.getElementById('bell-audio').src = url;
-        localStorage.setItem('v16_audio_url', url);
+        localStorage.setItem('v14_audio_url', url);
         document.getElementById('audio-current').innerText = "当前: 自定义直链";
         if(audioEnabled) document.getElementById('bell-audio').play();
     }
 
-    // --- Data Export/Import ---
     function exportData() {
-        const data = { blocks, presets, startTime, todos: JSON.parse(localStorage.getItem('v16_todos')||'[]'), audioUrl: localStorage.getItem('v16_audio_url') };
+        const data = { blocks, presets, startTime, todos: JSON.parse(localStorage.getItem('v14_todos')||'[]'), audioUrl: localStorage.getItem('v14_audio_url'), volume: localStorage.getItem('v14_vol') };
         const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href = url; a.download = "study-clock-backup.json"; a.click();
@@ -438,11 +438,12 @@
         reader.onload = function(e) {
             try {
                 const data = JSON.parse(e.target.result);
-                if(data.blocks) localStorage.setItem('v16_blocks', JSON.stringify(data.blocks));
-                if(data.presets) localStorage.setItem('v16_presets', JSON.stringify(data.presets));
-                if(data.startTime) localStorage.setItem('v16_start', data.startTime);
-                if(data.todos) localStorage.setItem('v16_todos', JSON.stringify(data.todos));
-                if(data.audioUrl) localStorage.setItem('v16_audio_url', data.audioUrl);
+                if(data.blocks) localStorage.setItem('v14_blocks', JSON.stringify(data.blocks));
+                if(data.presets) localStorage.setItem('v14_presets', JSON.stringify(data.presets));
+                if(data.startTime) localStorage.setItem('v14_start', data.startTime);
+                if(data.todos) localStorage.setItem('v14_todos', JSON.stringify(data.todos));
+                if(data.audioUrl) localStorage.setItem('v14_audio_url', data.audioUrl);
+                if(data.volume) localStorage.setItem('v14_vol', data.volume);
                 alert("导入成功，即将刷新...");
                 location.reload();
             } catch(err) { alert("文件格式错误"); }
@@ -450,12 +451,10 @@
         reader.readAsText(input.files[0]);
     }
 
-    function toggleEdit() { const v=document.getElementById('view-box'), e=document.getElementById('edit-box'), b=document.getElementById('edit-btn'); if(v.style.display==='none'){ v.style.display='block'; e.classList.remove('show'); b.innerText='✎ 编辑'; } else{ v.style.display='none'; e.classList.add('show'); b.innerText='👁 完成'; } }
-    function addBlock(t) { blocks.push({type:t, name:t==='class'?'课程':(t==='big'?'大休':'休息'), duration:t==='class'?50:(t==='big'?60:10)}); recalc(); }
-    function loadTodos(){ const t=JSON.parse(localStorage.getItem('v16_todos'))||[]; const c=document.getElementById('todo-list'); c.innerHTML=''; t.forEach((x,i)=>{ const d=document.createElement('div'); d.className=`todo-item ${x.done?'done':''}`; d.innerHTML=`<span style="flex:1;cursor:pointer" onclick="togT(${i})">${x.text}</span><button class="btn-ghost" style="padding:2px 6px;" onclick="delT(${i})">×</button>`; c.appendChild(d); }); }
-    function addTodo(){ const v=document.getElementById('todo-input').value; if(v){ const t=JSON.parse(localStorage.getItem('v16_todos'))||[]; t.push({text:v,done:false}); localStorage.setItem('v16_todos',JSON.stringify(t)); document.getElementById('todo-input').value=''; loadTodos(); }}
-    function togT(i){ const t=JSON.parse(localStorage.getItem('v16_todos')); t[i].done=!t[i].done; localStorage.setItem('v16_todos',JSON.stringify(t)); loadTodos(); }
-    function delT(i){ const t=JSON.parse(localStorage.getItem('v16_todos')); t.splice(i,1); localStorage.setItem('v16_todos',JSON.stringify(t)); loadTodos(); }
+    function loadTodos(){ const t=JSON.parse(localStorage.getItem('v14_todos'))||[]; const c=document.getElementById('todo-list'); c.innerHTML=''; t.forEach((x,i)=>{ const d=document.createElement('div'); d.className=`todo-item ${x.done?'done':''}`; d.innerHTML=`<span style="flex:1;cursor:pointer" onclick="togT(${i})">${x.text}</span><button class="btn-ghost" style="padding:2px 6px;" onclick="delT(${i})">×</button>`; c.appendChild(d); }); }
+    function addTodo(){ const v=document.getElementById('todo-input').value; if(v){ const t=JSON.parse(localStorage.getItem('v14_todos'))||[]; t.push({text:v,done:false}); localStorage.setItem('v14_todos',JSON.stringify(t)); document.getElementById('todo-input').value=''; loadTodos(); }}
+    function togT(i){ const t=JSON.parse(localStorage.getItem('v14_todos')); t[i].done=!t[i].done; localStorage.setItem('v14_todos',JSON.stringify(t)); loadTodos(); }
+    function delT(i){ const t=JSON.parse(localStorage.getItem('v14_todos')); t.splice(i,1); localStorage.setItem('v14_todos',JSON.stringify(t)); loadTodos(); }
     function pad(n){return n<10?'0'+n:n} function fmt(d){return `${pad(d.getHours())}:${pad(d.getMinutes())}`}
 </script>
 </body>
