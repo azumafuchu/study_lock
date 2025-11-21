@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STUDY CLOCK V6 - DIRECT EMBED</title>
+    <style>
+        :root {
+            --bg: #1e1e20;
+            --card: #252526;
+            --card-border: #383838;
+            --text: #d4d4d4;
+            --text-dim: #858585;
+            --accent: #4daafc;
+            --success: #81c995;
+            --danger: #e06c75;
+            --input-bg: #181818;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+
+        body {
+            background: var(--bg); color: var(--text);
+            display: flex; justify-content: center; min-height: 100vh; padding: 30px 20px;
+        }
+
+        .container {
+            width: 100%; max-width: 1100px;
+            display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+
+        /* 通用卡片 */
+        .card {
+            background: var(--card); border: 1px solid var(--card-border);
+            border-radius: 10px; padding: 18px; margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        
+        .card-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--card-border);
+            font-weight: 600; font-size: 0.95rem; color: #fff;
+        }
+
+        /* 按钮 */
+        button { border: none; border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 0.85rem; }
+        .btn-primary { background: var(--accent); color: #fff; padding: 6px 12px; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-small { background: #333; color: #ccc; padding: 4px 8px; font-size: 0.75rem; }
+        .btn-danger { color: var(--danger); background: transparent; }
+
+        /* 输入框 */
+        input, textarea {
+            background: var(--input-bg); border: 1px solid #444; color: #fff;
+            padding: 8px; border-radius: 4px; width: 100%; resize: vertical;
+            font-family: monospace; font-size: 0.85rem;
+        }
+        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+
+        /* 左侧：时钟 */
+        .timer-box { text-align: center; padding: 10px 0; }
+        .timer-big { font-size: 4.5rem; font-weight: 700; line-height: 1; color: #fff; font-variant-numeric: tabular-nums; }
+        .timer-label { color: var(--text-dim); margin-top: 8px; }
+        
+        .status-pill {
+            display: inline-block; padding: 4px 12px; border-radius: 20px;
+            font-size: 0.8rem; font-weight: bold; margin-bottom: 10px;
+            background: #333; color: #aaa;
+        }
+        .progress-bar { height: 4px; background: #111; margin-top: 20px; border-radius: 2px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 1s linear; }
+
+        /* 左侧：视频 - 核心修改区 */
+        .video-frame {
+            position: relative; padding-bottom: 56.25%; background: #000;
+            border-radius: 6px; overflow: hidden; margin-bottom: 10px; border: 1px solid #333;
+        }
+        /* 强制让内部的iframe撑满 */
+        .video-frame iframe { 
+            position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; border: none; 
+        }
+
+        /* 右侧：布局 */
+        .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+        /* 课表滚动区 */
+        .schedule-scroll-area {
+            max-height: 350px; overflow-y: auto; padding-right: 5px;
+        }
+        
+        /* 课表项 */
+        .sched-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 8px; border-bottom: 1px solid #333; font-size: 0.9rem; color: var(--text-dim);
+        }
+        .sched-item.active {
+            background: #2d2d30; border-left: 3px solid var(--accent); padding-left: 5px; color: #fff;
+        }
+        .sched-item.active-break { border-left-color: var(--success); }
+
+        /* 编辑器 */
+        .editor-area { display: none; flex-direction: column; gap: 8px; }
+        .editor-area.show { display: flex; }
+        .block-item {
+            background: #202020; padding: 8px; border-radius: 4px; border: 1px solid #333;
+            display: flex; gap: 8px; align-items: center; cursor: move;
+        }
+        .block-item:hover { border-color: #555; }
+
+        /* To-Do */
+        .todo-list { max-height: 250px; overflow-y: auto; }
+        .todo-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #333; font-size: 0.9rem; }
+        .todo-row.done span { text-decoration: line-through; opacity: 0.5; }
+        
+        /* 滚动条 */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div style="display: flex; flex-direction: column;">
+        
+        <div class="card">
+            <div style="display:flex; justify-content:space-between;">
+                <div id="bell-indicator" style="font-size:0.8rem; color:#555; display:flex; align-items:center; gap:5px;">
+                    🔕 铃声未激活
+                </div>
+                <button class="btn-small" onclick="enableAudio()">开启/测试</button>
+            </div>
+            <div class="timer-box">
+                <span class="status-pill" id="status-badge">准备中</span>
+                <div class="timer-big" id="timer-num">00:00</div>
+                <div class="timer-label" id="timer-text">---</div>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">📺 氛围背景 (Direct Embed)</div>
+            <div class="video-frame" id="video-box">
+                <div style="position:absolute;width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#555;">
+                    等待嵌入代码...
+                </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <textarea id="embed-code" rows="3" placeholder="在此处直接粘贴 <iframe...> 代码。&#10;例如 B站分享 -> 嵌入代码"></textarea>
+                <button class="btn-primary" style="width:100%" onclick="injectEmbed()">渲染嵌入代码</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">⚙️ 偏好设置</div>
+            <div style="margin-bottom: 15px;">
+                <label style="font-size:0.75rem; color:#888; margin-bottom:5px; display:block;">开始时间</label>
+                <input type="time" id="start-time" value="08:00" onchange="updateStartTime()">
+            </div>
+            <div style="border-top:1px solid #333; padding-top:15px;">
+                <label style="font-size:0.75rem; color:#888; margin-bottom:5px; display:block;">铃声</label>
+                <div style="display:flex; gap:10px; margin-bottom:8px;">
+                    <button class="btn-small" onclick="document.getElementById('audio-file').click()">📂 本地文件</button>
+                    <input type="file" id="audio-file" accept="audio/*" style="display:none" onchange="uploadAudio(this)">
+                </div>
+                <input type="text" id="audio-link" placeholder="在线音频链接" onblur="setOnlineAudio(this.value)">
+                <div id="audio-name" style="font-size:0.7rem; color:#4daafc; margin-top:4px;">当前: 默认铃声</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="right-col">
+        
+        <div class="card" style="margin-bottom: 0;">
+            <div class="card-header">
+                <span>📅 课表</span>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn-small" id="mode-view" onclick="setMode('view')" style="background:#4daafc; color:#fff;">预览</button>
+                    <button class="btn-small" id="mode-edit" onclick="setMode('edit')">编辑</button>
+                </div>
+            </div>
+
+            <div id="view-container" class="schedule-scroll-area"></div>
+
+            <div id="edit-container" class="schedule-scroll-area editor-area">
+                <div style="display:flex; gap:5px; margin-bottom:5px; position:sticky; top:0; background:var(--card); z-index:10; padding-bottom:5px; border-bottom:1px solid #333;">
+                    <button class="btn-small" style="flex:1; background:#2a4d69;" onclick="addBlock('class')">+ 课 (50m)</button>
+                    <button class="btn-small" style="flex:1;" onclick="addBlock('small')">+ 休 (10m)</button>
+                    <button class="btn-small" style="flex:1;" onclick="addBlock('big')">+ 大休 (60m)</button>
+                </div>
+                <div id="blocks-list" style="display:flex; flex-direction:column; gap:5px;"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">📝 To-Do</div>
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
+                <input type="text" id="todo-input" placeholder="任务..." onkeypress="if(event.key==='Enter') addTodo()">
+                <button class="btn-primary" onclick="addTodo()">+</button>
+            </div>
+            <div class="todo-list" id="todo-container"></div>
+        </div>
+
+    </div>
+
+</div>
+
+<audio id="bell-audio"></audio>
+
+<script>
+    const DEFAULT_BELL = "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3";
+    let blocks = JSON.parse(localStorage.getItem('v6_blocks')) || [
+        { type: 'class', name: '第 1 节课', duration: 50 },
+        { type: 'small', name: '休息', duration: 10 },
+        { type: 'class', name: '第 2 节课', duration: 50 },
+        { type: 'big',   name: '午休', duration: 60 },
+        { type: 'class', name: '第 3 节课', duration: 50 },
+    ];
+    let startTime = localStorage.getItem('v6_start') || "08:00";
+    let schedule = [];
+    let audioEnabled = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('start-time').value = startTime;
+        document.getElementById('bell-audio').src = DEFAULT_BELL;
+        
+        const savedAudio = localStorage.getItem('v6_audio_url');
+        if(savedAudio) {
+            document.getElementById('bell-audio').src = savedAudio;
+            document.getElementById('audio-name').textContent = "当前: 自定义链接";
+        }
+
+        // 恢复上次的嵌入代码
+        const savedEmbed = localStorage.getItem('v6_embed_code');
+        if(savedEmbed) {
+            document.getElementById('embed-code').value = savedEmbed;
+            injectEmbed();
+        }
+
+        recalc();
+        loadTodos();
+        setInterval(tick, 1000);
+        tick();
+    });
+
+    // --- VIDEO INJECTION ---
+    function injectEmbed() {
+        const code = document.getElementById('embed-code').value.trim();
+        if(!code) return;
+        
+        const box = document.getElementById('video-box');
+        // 直接将用户输入的 HTML 代码注入到容器中
+        box.innerHTML = code;
+        
+        // 保存到本地
+        localStorage.setItem('v6_embed_code', code);
+    }
+
+    // --- SCHEDULE LOGIC (UNCHANGED) ---
+    function recalc() {
+        schedule = [];
+        const [h, m] = startTime.split(':').map(Number);
+        let cursor = new Date();
+        cursor.setHours(h, m, 0, 0);
+
+        blocks.forEach(b => {
+            let end = new Date(cursor.getTime() + b.duration * 60000);
+            schedule.push({ ...b, start: new Date(cursor), end: end });
+            cursor = end;
+        });
+        renderView();
+        renderEdit();
+        localStorage.setItem('v6_blocks', JSON.stringify(blocks));
+        localStorage.setItem('v6_start', startTime);
+    }
+
+    function renderView() {
+        const el = document.getElementById('view-container');
+        el.innerHTML = '';
+        schedule.forEach((s, i) => {
+            const div = document.createElement('div');
+            div.className = 'sched-item';
+            div.id = `sched-${i}`;
+            const icon = s.type==='class'?'📘':(s.type==='big'?'🍽️':'☕');
+            div.innerHTML = `<div><span>${icon}</span> ${s.name}</div><div style="font-family:monospace;opacity:0.6;">${formatTime(s.start)} - ${formatTime(s.end)}</div>`;
+            el.appendChild(div);
+        });
+    }
+
+    function renderEdit() {
+        const el = document.getElementById('blocks-list');
+        el.innerHTML = '';
+        blocks.forEach((b, i) => {
+            const div = document.createElement('div');
+            div.className = 'block-item';
+            div.draggable = true;
+            div.dataset.index = i;
+            div.ondragstart = dragStart;
+            div.ondragover = dragOver;
+            div.ondrop = drop;
+            const icon = b.type==='class'?'📘':(b.type==='big'?'🍽️':'☕');
+            div.innerHTML = `
+                <span style="cursor:grab;color:#555;">☰</span><span>${icon}</span>
+                <input type="text" value="${b.name}" onchange="updateBlock(${i},'name',this.value)" style="flex:1;padding:4px;background:transparent;border:none;border-bottom:1px solid #444;">
+                <input type="number" value="${b.duration}" onchange="updateBlock(${i},'duration',this.value)" style="width:50px;text-align:center;">
+                <button class="btn-danger" onclick="delBlock(${i})">×</button>
+            `;
+            el.appendChild(div);
+        });
+    }
+
+    function setMode(mode) {
+        document.getElementById('view-container').style.display = mode==='view'?'block':'none';
+        document.getElementById('edit-container').style.display = mode==='edit'?'flex':'none';
+        document.getElementById('mode-view').style.background = mode==='view'?'#4daafc':'#333';
+        document.getElementById('mode-edit').style.background = mode==='edit'?'#4daafc':'#333';
+        document.getElementById('mode-view').style.color = mode==='view'?'#fff':'#ccc';
+        document.getElementById('mode-edit').style.color = mode==='edit'?'#fff':'#ccc';
+    }
+
+    function addBlock(type) {
+        let name = '休息', dur = 10;
+        if(type === 'class') {
+            const cnt = blocks.filter(b=>b.type==='class').length + 1;
+            name = `第 ${cnt} 节课`; dur = 50;
+        } else if(type === 'big') { name = '大休息'; dur = 60; }
+        blocks.push({ type, name, duration: dur });
+        recalc();
+        setTimeout(() => document.getElementById('edit-container').scrollTop = 9999, 50);
+    }
+    function delBlock(i) { blocks.splice(i, 1); recalc(); }
+    function updateBlock(i, k, v) { if(k==='duration') v=parseInt(v); blocks[i][k]=v; recalc(); }
+    function updateStartTime() { startTime = document.getElementById('start-time').value; recalc(); }
+
+    // --- DRAG & DROP ---
+    let dragIdx = null;
+    function dragStart(e) { dragIdx = this.dataset.index; e.dataTransfer.effectAllowed='move'; }
+    function dragOver(e) { e.preventDefault(); return false; }
+    function drop(e) {
+        e.stopPropagation();
+        const targetIdx = this.dataset.index;
+        if(dragIdx !== targetIdx) {
+            const item = blocks.splice(dragIdx, 1)[0];
+            blocks.splice(targetIdx, 0, item);
+            recalc();
+        }
+        return false;
+    }
+
+    // --- TIMER ---
+    let lastIdx = -1;
+    function tick() {
+        const now = new Date();
+        let cur = null, idx = -1;
+        for(let i=0; i<schedule.length; i++) {
+            if(now >= schedule[i].start && now < schedule[i].end) { cur = schedule[i]; idx = i; break; }
+        }
+        document.querySelectorAll('.sched-item').forEach(e => e.classList.remove('active', 'active-break'));
+        const badge = document.getElementById('status-badge');
+        const timer = document.getElementById('timer-num');
+        const label = document.getElementById('timer-text');
+        const bar = document.getElementById('progress-fill');
+
+        if(cur) {
+            const row = document.getElementById(`sched-${idx}`);
+            if(row) {
+                row.classList.add(cur.type==='class'?'active':'active-break');
+                if(idx !== lastIdx) row.scrollIntoView({behavior:'smooth', block:'center'});
+            }
+            badge.innerText = cur.type==='class'?'🧠 学习中':'☕ 休息中';
+            badge.style.background = cur.type==='class'?'#4daafc':'#81c995';
+            badge.style.color = cur.type==='class'?'#fff':'#000';
+            timer.innerText = msToStr(cur.end - now);
+            label.innerText = `距离 ${cur.name} 结束`;
+            bar.style.width = ((now - cur.start)/(cur.end - cur.start)*100) + '%';
+            if(idx !== lastIdx && lastIdx !== -1) playBell();
+            lastIdx = idx;
+        } else {
+            badge.innerText = "等待中"; badge.style.background='#333'; badge.style.color='#aaa';
+            bar.style.width = '0%';
+            if(schedule.length && now < schedule[0].start) {
+                timer.innerText = msToStr(schedule[0].start - now); label.innerText="距离开始";
+            } else { timer.innerText = "END"; label.innerText="今日结束"; }
+        }
+    }
+
+    // --- AUDIO / TODO / UTILS ---
+    function enableAudio() {
+        const a = document.getElementById('bell-audio');
+        a.play().then(()=>{
+            a.pause(); a.currentTime=0; audioEnabled=true;
+            document.getElementById('bell-indicator').innerHTML = "🔔 铃声已就绪";
+            document.getElementById('bell-indicator').style.color = "#81c995";
+            playBell();
+        }).catch(()=>alert("请点击页面允许声音播放"));
+    }
+    function playBell() { if(audioEnabled) document.getElementById('bell-audio').play(); }
+    function uploadAudio(i) {
+        if(i.files[0]) {
+            document.getElementById('bell-audio').src = URL.createObjectURL(i.files[0]);
+            document.getElementById('audio-name').innerText = "当前: " + i.files[0].name;
+            if(audioEnabled) playBell();
+        }
+    }
+    function setOnlineAudio(u) {
+        if(!u) return;
+        document.getElementById('bell-audio').src = u;
+        localStorage.setItem('v6_audio_url', u);
+        document.getElementById('audio-name').innerText = "当前: 在线链接";
+    }
+    function loadTodos() {
+        const t = JSON.parse(localStorage.getItem('v6_todos')) || [];
+        const el = document.getElementById('todo-container');
+        el.innerHTML = '';
+        t.forEach((item, i) => {
+            const div = document.createElement('div');
+            div.className = `todo-row ${item.done?'done':''}`;
+            div.innerHTML = `<span onclick="toggleTodo(${i})" style="cursor:pointer;flex:1;">${item.text}</span><button class="btn-danger" onclick="delTodo(${i})">×</button>`;
+            el.appendChild(div);
+        });
+    }
+    function addTodo() {
+        const v = document.getElementById('todo-input').value.trim();
+        if(!v) return;
+        const t = JSON.parse(localStorage.getItem('v6_todos')) || [];
+        t.push({text:v, done:false});
+        localStorage.setItem('v6_todos', JSON.stringify(t));
+        document.getElementById('todo-input').value=''; loadTodos();
+    }
+    function toggleTodo(i) {
+        const t = JSON.parse(localStorage.getItem('v6_todos')); t[i].done=!t[i].done;
+        localStorage.setItem('v6_todos', JSON.stringify(t)); loadTodos();
+    }
+    function delTodo(i) {
+        const t = JSON.parse(localStorage.getItem('v6_todos')); t.splice(i,1);
+        localStorage.setItem('v6_todos', JSON.stringify(t)); loadTodos();
+    }
+    function pad(n) { return n<10?'0'+n:n; }
+    function formatTime(d) { return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+    function msToStr(ms) {
+        const s = Math.floor(ms/1000); if(s<0) return "00:00";
+        return `${pad(Math.floor(s/60))}:${pad(s%60)}`;
+    }
+</script>
+</body>
+</html>
