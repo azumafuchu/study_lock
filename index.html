@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STUDY CLOCK V7 - SMART LINK</title>
+    <title>STUDY CLOCK V16 - ZEN</title>
     <style>
         :root {
             --bg: #1e1e20;
@@ -13,105 +13,133 @@
             --text-dim: #858585;
             --accent: #4daafc;
             --success: #81c995;
+            --warn: #e5c07b;
             --danger: #e06c75;
             --input-bg: #181818;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; }
 
         body {
             background: var(--bg); color: var(--text);
             display: flex; justify-content: center; min-height: 100vh; padding: 30px 20px;
+            opacity: 0; animation: fadeIn 0.5s ease forwards; transition: padding 0.5s;
         }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         .container {
             width: 100%; max-width: 1100px;
             display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px;
-            align-items: start;
+            align-items: start; transition: all 0.5s ease;
         }
-
         @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
 
-        /* 通用卡片 */
+        /* --- ZEN MODE STYLES --- */
+        body.zen-mode { padding: 0; align-items: center; }
+        body.zen-mode .container { 
+            grid-template-columns: 1fr; max-width: 900px; gap: 0;
+        }
+        body.zen-mode .right-col, 
+        body.zen-mode #settings-card, 
+        body.zen-mode .card-header button, /* 隐藏卡片头部的按钮 */
+        body.zen-mode .video-settings {    /* 隐藏视频设置 */
+            display: none !important; 
+        }
+        body.zen-mode .card {
+            margin-bottom: 20px; border: none; background: transparent; box-shadow: none;
+        }
+        body.zen-mode #clock-card .sys-time { font-size: 8rem; text-shadow: 0 0 30px rgba(0,0,0,0.5); }
+        body.zen-mode #video-card .video-frame { height: 60vh; border: none; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+
+        /* --- Standard Styles --- */
         .card {
             background: var(--card); border: 1px solid var(--card-border);
-            border-radius: 10px; padding: 18px; margin-bottom: 20px;
+            border-radius: 10px; padding: 18px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column; position: relative;
+            transition: all 0.5s ease;
         }
-        
+        .card.resizable { resize: vertical; overflow: auto; border: 1px dashed #666; box-shadow: none; flex: none !important; min-height: 100px; }
+        .card.resizable::after { content: ""; position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; background: linear-gradient(135deg, transparent 50%, var(--accent) 50%); pointer-events: none; }
+
         .card-header {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--card-border);
             font-weight: 600; font-size: 0.95rem; color: #fff;
         }
 
-        /* 按钮 */
         button { border: none; border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 0.85rem; }
         .btn-primary { background: var(--accent); color: #fff; padding: 6px 12px; }
         .btn-primary:hover { opacity: 0.9; }
-        .btn-small { background: #333; color: #ccc; padding: 4px 8px; font-size: 0.75rem; }
-        .btn-danger { color: var(--danger); background: transparent; }
-
-        /* 输入框 */
-        input {
+        .btn-ghost { background: #333; color: #ccc; padding: 4px 10px; }
+        .btn-ghost:hover { background: #444; color: #fff; }
+        
+        input, textarea {
             background: var(--input-bg); border: 1px solid #444; color: #fff;
             padding: 8px; border-radius: 4px; width: 100%; font-size: 0.85rem;
         }
-        input:focus { outline: none; border-color: var(--accent); }
+        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
 
-        /* 左侧：时钟 */
-        .timer-box { text-align: center; padding: 10px 0; }
-        .timer-big { font-size: 4.5rem; font-weight: 700; line-height: 1; color: #fff; font-variant-numeric: tabular-nums; }
-        .timer-label { color: var(--text-dim); margin-top: 8px; }
+        /* Range Slider */
+        input[type=range] { -webkit-appearance: none; background: transparent; padding: 0; }
+        input[type=range]::-webkit-slider-runnable-track { height: 4px; background: #444; border-radius: 2px; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: var(--accent); margin-top: -5px; cursor: pointer; }
+
+        .right-col { display: flex; flex-direction: column; gap: 15px; }
+        .edit-panel { display: none; flex-direction: column; gap: 10px; margin-top: 10px; }
+        .edit-panel.show { display: flex; }
         
-        .status-pill {
-            display: inline-block; padding: 4px 12px; border-radius: 20px;
-            font-size: 0.8rem; font-weight: bold; margin-bottom: 10px;
-            background: #333; color: #aaa;
+        .add-btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 5px; }
+        .add-btn { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 10px 0; border-radius: 6px; font-weight: 600; font-size: 0.9rem; transition: transform 0.1s, opacity 0.2s; }
+        .add-btn:active { transform: scale(0.96); } .add-btn:hover { opacity: 0.9; }
+        .btn-class { background: rgba(77, 170, 252, 0.15); color: var(--accent); border: 1px solid rgba(77, 170, 252, 0.3); }
+        .btn-small { background: rgba(129, 201, 149, 0.15); color: var(--success); border: 1px solid rgba(129, 201, 149, 0.3); }
+        .btn-big { background: rgba(229, 192, 123, 0.15); color: var(--warn); border: 1px solid rgba(229, 192, 123, 0.3); }
+
+        .block-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 8px 10px; display: flex; gap: 10px; align-items: center; animation: slideIn 0.3s ease; transition: background 0.2s; }
+        .block-item:hover { background: rgba(255,255,255,0.06); border-color: #555; }
+        .drag-handle { cursor: grab; color: #555; font-size: 1.2rem; padding: 0 4px; }
+        .time-input-wrapper { position: relative; width: 60px; display: flex; align-items: center; background: #111; border-radius: 4px; padding: 4px; border: 1px solid #333; }
+        .time-input { width: 100%; text-align: center; font-weight: bold; color: var(--accent); padding: 0; border: none; background: transparent; -moz-appearance: textfield; }
+        .time-input::-webkit-outer-spin-button, .time-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .del-btn { color: #666; font-size: 1.2rem; padding: 0 8px; cursor: pointer; display: flex; align-items: center; height: 100%; }
+        .del-btn:hover { color: var(--danger); }
+
+        .scroll-area { overflow-y: auto; padding-right: 5px; max-height: 450px; min-height: 50px; }
+        .sched-item { display: flex; justify-content: space-between; padding: 10px 8px; border-bottom: 1px solid #333; font-size: 0.9rem; color: var(--text-dim); }
+        .sched-item.active { background: #2d2d30; border-left: 3px solid var(--accent); padding-left: 5px; color: #fff; }
+        .todo-item { display: flex; justify-content: space-between; padding: 10px 8px; border-bottom: 1px solid #333; font-size: 0.9rem; }
+        .todo-item.done span { text-decoration: line-through; opacity: 0.5; }
+
+        /* Floating Buttons */
+        .float-container { position: fixed; bottom: 30px; left: 30px; display: flex; gap: 10px; z-index: 100; }
+        .float-btn {
+            background: rgba(30, 30, 32, 0.9); border: 1px solid #555; color: #ccc;
+            padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: bold; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4); transition: 0.3s;
         }
+        .float-btn:hover { border-color: #fff; color: #fff; }
+        .float-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .zen-btn { color: var(--success); border-color: var(--success); }
+        .zen-btn:hover { background: var(--success); color: #000; }
+
+        .timer-box { text-align: center; padding: 15px 0; }
+        .sys-time { font-size: 4.5rem; font-weight: 700; line-height: 1; color: #fff; font-variant-numeric: tabular-nums; text-shadow: 0 2px 10px rgba(0,0,0,0.3); transition: font-size 0.5s; }
+        .countdown-area { margin-top: 10px; opacity: 0.8; }
+        .countdown-val { font-family: monospace; color: var(--accent); font-weight: bold; font-size: 1.2rem; }
+        .status-pill { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-top: 10px; background: #333; color: #aaa; }
+        .status-pill.active { background: var(--accent); color: #fff; }
+        .status-pill.break { background: var(--success); color: #fff; }
         .progress-bar { height: 4px; background: #111; margin-top: 20px; border-radius: 2px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 1s linear; }
-
-        /* 左侧：视频 */
-        .video-frame {
-            position: relative; padding-bottom: 56.25%; background: #000;
-            border-radius: 6px; overflow: hidden; margin-bottom: 10px; border: 1px solid #333;
-        }
+        
+        .video-frame { position: relative; padding-bottom: 56.25%; background: #000; border-radius: 6px; overflow: hidden; margin-bottom: 10px; border: 1px solid #333; transition: height 0.5s; }
         .video-frame iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
-
-        /* 右侧：布局 */
-        .right-col { display: flex; flex-direction: column; gap: 20px; }
-
-        /* 课表滚动区 */
-        .schedule-scroll-area {
-            max-height: 350px; overflow-y: auto; padding-right: 5px;
-        }
+        .video-settings { display: none; flex-direction: column; gap: 10px; border-top: 1px solid #333; padding-top: 10px; margin-top: 10px; animation: slideIn 0.3s ease; }
+        .video-settings.show { display: flex; }
+        .preset-tag { background: #333; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; margin-right: 5px; display: inline-block; margin-bottom: 5px; }
         
-        /* 课表项 */
-        .sched-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 8px; border-bottom: 1px solid #333; font-size: 0.9rem; color: var(--text-dim);
-        }
-        .sched-item.active {
-            background: #2d2d30; border-left: 3px solid var(--accent); padding-left: 5px; color: #fff;
-        }
-        .sched-item.active-break { border-left-color: var(--success); }
-
-        /* 编辑器 */
-        .editor-area { display: none; flex-direction: column; gap: 8px; }
-        .editor-area.show { display: flex; }
-        .block-item {
-            background: #202020; padding: 8px; border-radius: 4px; border: 1px solid #333;
-            display: flex; gap: 8px; align-items: center; cursor: move;
-        }
-        .block-item:hover { border-color: #555; }
-
-        /* To-Do */
-        .todo-list { max-height: 250px; overflow-y: auto; }
-        .todo-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #333; font-size: 0.9rem; }
-        .todo-row.done span { text-decoration: line-through; opacity: 0.5; }
-        
-        /* 滚动条 */
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
     </style>
@@ -119,361 +147,316 @@
 <body>
 
 <div class="container">
-    
-    <div style="display: flex; flex-direction: column;">
-        
-        <div class="card">
-            <div style="display:flex; justify-content:space-between;">
-                <div id="bell-indicator" style="font-size:0.8rem; color:#555; display:flex; align-items:center; gap:5px;">
-                    🔕 铃声未激活
-                </div>
-                <button class="btn-small" onclick="enableAudio()">开启/测试</button>
-            </div>
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="card" id="clock-card">
+            <div class="card-header"><span>当前时间</span><span id="bell-status" style="font-size:0.75rem; color:#666;">🔕 静音</span></div>
             <div class="timer-box">
-                <span class="status-pill" id="status-badge">准备中</span>
-                <div class="timer-big" id="timer-num">00:00</div>
-                <div class="timer-label" id="timer-text">---</div>
+                <div class="sys-time" id="sys-time">00:00</div>
+                <div class="countdown-area">
+                    <div class="countdown-val" id="timer-num">--:--</div>
+                    <div style="font-size:0.8rem; color:#888;" id="timer-text">等待开始...</div>
+                </div>
+                <span class="status-pill" id="status-tag">待机</span>
             </div>
             <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
         </div>
 
-        <div class="card">
-            <div class="card-header">📺 氛围背景</div>
-            <div class="video-frame" id="video-box">
-                <div style="position:absolute;width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#555;">
-                    等待播放...
+        <div class="card" id="video-card">
+            <div class="card-header"><span>Study With Me</span><button class="btn-ghost" style="font-size:0.75rem;" onclick="toggleVideoSet()">﹀ 设置</button></div>
+            <div class="video-frame" id="video-box"><div style="position:absolute;width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#555;">NO VIDEO</div></div>
+            <div class="video-settings" id="video-settings">
+                <div style="display:flex; justify-content:flex-end; margin-bottom:5px;">
+                    <span style="font-size:0.7rem; color:var(--accent); cursor:pointer;" onclick="toggleEmbedMode()" id="mode-switch-txt">切换到：嵌入代码模式</span>
                 </div>
-            </div>
-            <div style="display:flex; gap:8px;">
-                <input type="text" id="video-url" placeholder="粘贴 B站(BV号) 或 YouTube 链接">
-                <button class="btn-primary" onclick="loadSmartVideo()">播放</button>
-            </div>
-            <p style="font-size:0.7rem; color:#666; margin-top:5px;">* 系统将自动应用防报错策略 (Strict Origin)</p>
-        </div>
-
-        <div class="card">
-            <div class="card-header">⚙️ 偏好设置</div>
-            <div style="margin-bottom: 15px;">
-                <label style="font-size:0.75rem; color:#888; margin-bottom:5px; display:block;">开始时间</label>
-                <input type="time" id="start-time" value="08:00" onchange="updateStartTime()">
-            </div>
-            <div style="border-top:1px solid #333; padding-top:15px;">
-                <label style="font-size:0.75rem; color:#888; margin-bottom:5px; display:block;">铃声</label>
-                <div style="display:flex; gap:10px; margin-bottom:8px;">
-                    <button class="btn-small" onclick="document.getElementById('audio-file').click()">📂 本地文件</button>
-                    <input type="file" id="audio-file" accept="audio/*" style="display:none" onchange="uploadAudio(this)">
+                <div id="input-mode-link" style="display:block;">
+                    <div style="display:flex; gap:5px; margin-bottom:5px;">
+                        <input type="text" id="video-url" placeholder="粘贴链接 (B站BV号 / YouTube)">
+                        <button class="btn-primary" onclick="loadVideo()">播放</button>
+                    </div>
                 </div>
-                <input type="text" id="audio-link" placeholder="在线音频链接" onblur="setOnlineAudio(this.value)">
-                <div id="audio-name" style="font-size:0.7rem; color:#4daafc; margin-top:4px;">当前: 默认铃声</div>
+                <div id="input-mode-code" style="display:none;">
+                    <div style="display:flex; flex-direction:column; gap:5px; margin-bottom:5px;">
+                        <textarea id="video-code" rows="3" placeholder="在此粘贴 iframe 代码..." style="background:var(--input-bg);border:1px solid #444;color:#fff;width:100%;padding:8px;border-radius:4px;resize:vertical;"></textarea>
+                        <button class="btn-primary" onclick="loadEmbedCode()">渲染代码</button>
+                    </div>
+                </div>
+                <div style="margin-top:5px;">
+                    <div style="font-size:0.75rem; color:#666; margin-bottom:5px;">预设: <span style="cursor:pointer; color:var(--accent)" onclick="addPreset()">[+存当前]</span></div>
+                    <div id="preset-list"></div>
+                </div>
             </div>
         </div>
 
+        <div class="card" id="settings-card">
+            <div class="card-header">偏好设置</div>
+            <div style="display:flex; flex-direction:column; gap:15px;">
+                <div style="display:flex; gap:15px; flex-wrap:wrap;">
+                    <div style="flex:1;"><label style="font-size:0.75rem; color:#888; display:block; margin-bottom:5px;">开始时间</label><input type="time" id="start-time" value="08:00" onchange="recalc()"></div>
+                    <div style="flex:1;">
+                        <label style="font-size:0.75rem; color:#888; display:block; margin-bottom:5px;">提示铃声</label>
+                        <div style="display:flex; align-items:center; gap:5px; margin-bottom:5px;">
+                            <button class="btn-ghost" style="flex:1;" onclick="enableAudio()">🔊 开启</button>
+                            <input type="range" id="vol-control" min="0" max="1" step="0.1" value="1" style="width:60px;" oninput="setVolume(this.value)">
+                        </div>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn-ghost" style="flex:1;" onclick="document.getElementById('aud-file').click()">📂 上传</button>
+                            <input type="file" id="aud-file" hidden accept="audio/*" onchange="upAudio(this)">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size:0.75rem; color:#888; display:block; margin-bottom:5px;">或粘贴铃声直链</label>
+                    <input type="text" id="audio-link" placeholder="https://..." onblur="setOnlineAudio(this.value)">
+                    <div id="audio-current" style="font-size:0.7rem; color:var(--accent); margin-top:3px;"></div>
+                </div>
+                <div style="border-top:1px solid #333; padding-top:10px; display:flex; gap:10px;">
+                    <button class="btn-ghost" onclick="exportData()" style="flex:1; font-size:0.75rem;">📥 导出配置</button>
+                    <button class="btn-ghost" onclick="document.getElementById('import-file').click()" style="flex:1; font-size:0.75rem;">📤 导入配置</button>
+                    <input type="file" id="import-file" hidden accept=".json" onchange="importData(this)">
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="right-col">
-        
-        <div class="card" style="margin-bottom: 0;">
-            <div class="card-header">
-                <span>📅 课表</span>
-                <div style="display:flex; gap:5px;">
-                    <button class="btn-small" id="mode-view" onclick="setMode('view')" style="background:#4daafc; color:#fff;">预览</button>
-                    <button class="btn-small" id="mode-edit" onclick="setMode('edit')">编辑</button>
+        <div class="card" id="schedule-card">
+            <div class="card-header"><span>今日课表</span><button class="btn-ghost" id="edit-btn" style="font-size:0.75rem;" onclick="toggleEdit()">✎ 编辑</button></div>
+            <div id="view-box" class="scroll-area"></div>
+            <div id="edit-box" class="scroll-area edit-panel">
+                <div class="add-btn-group">
+                    <button class="add-btn btn-class" onclick="addBlock('class')"><span>+</span> 课程</button>
+                    <button class="add-btn btn-small" onclick="addBlock('small')"><span>+</span> 小休</button>
+                    <button class="add-btn btn-big" onclick="addBlock('big')"><span>+</span> 大休</button>
                 </div>
-            </div>
-
-            <div id="view-container" class="schedule-scroll-area"></div>
-
-            <div id="edit-container" class="schedule-scroll-area editor-area">
-                <div style="display:flex; gap:5px; margin-bottom:5px; position:sticky; top:0; background:var(--card); z-index:10; padding-bottom:5px; border-bottom:1px solid #333;">
-                    <button class="btn-small" style="flex:1; background:#2a4d69;" onclick="addBlock('class')">+ 课 (50m)</button>
-                    <button class="btn-small" style="flex:1;" onclick="addBlock('small')">+ 休 (10m)</button>
-                    <button class="btn-small" style="flex:1;" onclick="addBlock('big')">+ 大休 (60m)</button>
-                </div>
-                <div id="blocks-list" style="display:flex; flex-direction:column; gap:5px;"></div>
+                <div id="block-list" style="display:flex; flex-direction:column; gap:8px;"></div>
             </div>
         </div>
-
-        <div class="card">
-            <div class="card-header">📝 To-Do</div>
-            <div style="display:flex; gap:8px; margin-bottom:10px;">
-                <input type="text" id="todo-input" placeholder="任务..." onkeypress="if(event.key==='Enter') addTodo()">
-                <button class="btn-primary" onclick="addTodo()">+</button>
-            </div>
-            <div class="todo-list" id="todo-container"></div>
+        <div class="card" id="todo-card">
+            <div class="card-header">待办清单</div>
+            <div style="display:flex; gap:5px; margin-bottom:10px;"><input type="text" id="todo-input" placeholder="新任务..." onkeypress="if(event.key==='Enter') addTodo()"><button class="btn-primary" onclick="addTodo()">+</button></div>
+            <div class="scroll-area" id="todo-list" style="max-height: 250px;"></div>
         </div>
-
     </div>
+</div>
 
+<div class="float-container">
+    <button class="float-btn" id="layout-btn" onclick="toggleLayout()">🔓 调整布局</button>
+    <button class="float-btn zen-btn" onclick="toggleZen()">🧘 专注模式</button>
 </div>
 
 <audio id="bell-audio"></audio>
 
 <script>
     const DEFAULT_BELL = "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3";
-    let blocks = JSON.parse(localStorage.getItem('v7_blocks')) || [
-        { type: 'class', name: '第 1 节课', duration: 50 },
+    const DEFAULT_VIDEO = "https://www.youtube.com/watch?v=jfKfPfyJRdk";
+    
+    // Init Data
+    let blocks = JSON.parse(localStorage.getItem('v16_blocks')) || [
+        { type: 'class', name: '第一节课', duration: 50 },
         { type: 'small', name: '休息', duration: 10 },
-        { type: 'class', name: '第 2 节课', duration: 50 },
-        { type: 'big',   name: '午休', duration: 60 },
-        { type: 'class', name: '第 3 节课', duration: 50 },
+        { type: 'class', name: '第二节课', duration: 50 },
     ];
-    let startTime = localStorage.getItem('v7_start') || "08:00";
+    let presets = JSON.parse(localStorage.getItem('v16_presets')) || [
+        { name: "Lofi Girl", url: DEFAULT_VIDEO },
+        { name: "B站雨声", url: "https://www.bilibili.com/video/BV1bJ411r76H" }
+    ];
+    let startTime = localStorage.getItem('v16_start') || "08:00";
     let schedule = [];
     let audioEnabled = false;
+    let isLayoutEdit = false;
+    let lastIdx = -1;
+    let isCodeMode = false;
+    let isZen = false;
 
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('start-time').value = startTime;
-        document.getElementById('bell-audio').src = DEFAULT_BELL;
         
-        const savedAudio = localStorage.getItem('v7_audio_url');
-        if(savedAudio) {
-            document.getElementById('bell-audio').src = savedAudio;
-            document.getElementById('audio-name').textContent = "当前: 自定义链接";
-        }
+        // Audio & Vol
+        const savedAudioUrl = localStorage.getItem('v16_audio_url');
+        const savedVol = localStorage.getItem('v16_vol') || 1;
+        document.getElementById('bell-audio').volume = savedVol;
+        document.getElementById('vol-control').value = savedVol;
 
-        // Auto load saved video url
-        const savedVideoUrl = localStorage.getItem('v7_video_url');
-        if(savedVideoUrl) {
-            document.getElementById('video-url').value = savedVideoUrl;
-            loadSmartVideo();
+        if(savedAudioUrl) {
+            document.getElementById('bell-audio').src = savedAudioUrl;
+            document.getElementById('audio-link').value = savedAudioUrl;
+            document.getElementById('audio-current').innerText = "当前: 自定义直链";
         } else {
-            // Default
-            document.getElementById('video-url').value = "https://www.youtube.com/watch?v=jfKfPfyJRdk";
-            loadSmartVideo();
+            document.getElementById('bell-audio').src = DEFAULT_BELL;
+            document.getElementById('audio-current').innerText = "当前: 默认铃声";
         }
 
-        recalc();
-        loadTodos();
-        setInterval(tick, 1000);
-        tick();
+        const savedVid = localStorage.getItem('v16_video') || DEFAULT_VIDEO;
+        document.getElementById('video-url').value = savedVid;
+        loadVideo(savedVid);
+
+        recalc(); renderPresets(); loadTodos();
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('sys-time').innerText = now.toLocaleTimeString('en-GB', {hour12:false, hour:'2-digit', minute:'2-digit'});
+            tick(now);
+        }, 1000);
     });
 
-    // --- SMART VIDEO LOGIC (The key fix) ---
-    function loadSmartVideo() {
-        const url = document.getElementById('video-url').value.trim();
-        if(!url) return;
-        
-        const box = document.getElementById('video-box');
-        let embedCode = "";
+    // --- Core Features ---
+    function toggleZen() {
+        isZen = !isZen;
+        if(isZen) document.body.classList.add('zen-mode');
+        else document.body.classList.remove('zen-mode');
+    }
 
-        // Save URL
-        localStorage.setItem('v7_video_url', url);
-
-        // 1. Bilibili Logic
-        if(url.includes('bilibili') || url.startsWith('BV')) {
-            const bvid = url.match(/BV\w+/);
-            if(bvid) {
-                // 自动添加 isOutside=true 和高画质
-                embedCode = `<iframe src="//player.bilibili.com/player.html?isOutside=true&bvid=${bvid[0]}&page=1&high_quality=1&danmaku=0&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" style="width:100%;height:100%;"></iframe>`;
-            }
-        } 
-        // 2. YouTube Logic (With Fix)
-        else if(url.includes('youtu')) {
-            let vid = "";
-            try {
-                if(url.includes('v=')) vid=url.split('v=')[1].split('&')[0];
-                else if(url.includes('.be/')) vid=url.split('.be/')[1].split('?')[0];
-            } catch(e){}
-
-            if(vid) {
-                // 关键修复：添加 referrerpolicy="strict-origin-when-cross-origin"
-                embedCode = `<iframe src="https://www.youtube.com/embed/${vid}?autoplay=1&mute=1&loop=1&playlist=${vid}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen style="width:100%;height:100%;"></iframe>`;
-            }
-        }
-
-        if(embedCode) {
-            box.innerHTML = embedCode;
+    function toggleLayout() {
+        isLayoutEdit = !isLayoutEdit;
+        const btn = document.getElementById('layout-btn');
+        const cards = document.querySelectorAll('.card');
+        const schedCard = document.getElementById('schedule-card');
+        if(isLayoutEdit) {
+            btn.classList.add('active'); btn.innerText = "🔒 锁定布局";
+            cards.forEach(c => c.classList.add('resizable'));
+            schedCard.style.flex = 'none'; 
         } else {
-            // If not recognized, try simple iframe
-            box.innerHTML = `<div style="color:#666;">无法识别链接，请使用 B站 或 YouTube 链接</div>`;
+            btn.classList.remove('active'); btn.innerText = "🔓 调整布局";
+            cards.forEach(c => c.classList.remove('resizable'));
         }
     }
 
-    // --- SCHEDULE LOGIC (Standard) ---
     function recalc() {
-        schedule = [];
+        schedule = []; startTime = document.getElementById('start-time').value;
         const [h, m] = startTime.split(':').map(Number);
-        let cursor = new Date();
-        cursor.setHours(h, m, 0, 0);
-
+        let t = new Date(); t.setHours(h, m, 0, 0);
         blocks.forEach(b => {
-            let end = new Date(cursor.getTime() + b.duration * 60000);
-            schedule.push({ ...b, start: new Date(cursor), end: end });
-            cursor = end;
+            let e = new Date(t.getTime() + b.duration * 60000);
+            schedule.push({...b, start: new Date(t), end: e}); t = e;
         });
-        renderView();
-        renderEdit();
-        localStorage.setItem('v7_blocks', JSON.stringify(blocks));
-        localStorage.setItem('v7_start', startTime);
+        renderView(); renderEdit();
+        localStorage.setItem('v16_blocks', JSON.stringify(blocks));
+        localStorage.setItem('v16_start', startTime);
     }
 
+    // --- Rendering ---
     function renderView() {
-        const el = document.getElementById('view-container');
-        el.innerHTML = '';
+        const c = document.getElementById('view-box'); c.innerHTML = '';
         schedule.forEach((s, i) => {
-            const div = document.createElement('div');
-            div.className = 'sched-item';
-            div.id = `sched-${i}`;
-            const icon = s.type==='class'?'📘':(s.type==='big'?'🍽️':'☕');
-            div.innerHTML = `<div><span>${icon}</span> ${s.name}</div><div style="font-family:monospace;opacity:0.6;">${formatTime(s.start)} - ${formatTime(s.end)}</div>`;
-            el.appendChild(div);
+            const d = document.createElement('div'); d.className = 'sched-item'; d.id = `sched-${i}`;
+            d.innerHTML = `<span>${s.name}</span><span style="font-family:monospace">${fmt(s.start)}-${fmt(s.end)}</span>`;
+            c.appendChild(d);
         });
     }
 
     function renderEdit() {
-        const el = document.getElementById('blocks-list');
-        el.innerHTML = '';
+        const c = document.getElementById('block-list'); c.innerHTML = '';
         blocks.forEach((b, i) => {
-            const div = document.createElement('div');
-            div.className = 'block-item';
-            div.draggable = true;
-            div.dataset.index = i;
-            div.ondragstart = dragStart;
-            div.ondragover = dragOver;
-            div.ondrop = drop;
-            const icon = b.type==='class'?'📘':(b.type==='big'?'🍽️':'☕');
-            div.innerHTML = `
-                <span style="cursor:grab;color:#555;">☰</span><span>${icon}</span>
-                <input type="text" value="${b.name}" onchange="updateBlock(${i},'name',this.value)" style="flex:1;padding:4px;background:transparent;border:none;border-bottom:1px solid #444;">
-                <input type="number" value="${b.duration}" onchange="updateBlock(${i},'duration',this.value)" style="width:50px;text-align:center;">
-                <button class="btn-danger" onclick="delBlock(${i})">×</button>
+            const d = document.createElement('div'); d.className = 'block-item';
+            d.draggable = true;
+            d.ondragstart = e => { e.dataTransfer.effectAllowed='move'; window.dragSrc=i; };
+            d.ondragover = e => e.preventDefault();
+            d.ondrop = e => { if(window.dragSrc!==i) { const x=blocks.splice(window.dragSrc,1)[0]; blocks.splice(i,0,x); recalc(); } };
+            
+            d.innerHTML = `
+                <span class="drag-handle" style="cursor:grab;color:#555">☰</span>
+                <input value="${b.name}" onchange="blocks[${i}].name=this.value;recalc()" 
+                       style="flex:1; padding:6px 10px; background:transparent; border:none; border-bottom:1px solid #444; border-radius:0;">
+                <div class="time-input-wrapper">
+                    <input type="number" class="time-input" value="${b.duration}" onchange="blocks[${i}].duration=parseInt(this.value);recalc()">
+                    <span style="font-size:0.7rem; color:#666; padding-right:2px;">m</span>
+                </div>
+                <span class="del-btn" onclick="blocks.splice(${i},1);recalc()">×</span>
             `;
-            el.appendChild(div);
+            c.appendChild(d);
         });
     }
 
-    function setMode(mode) {
-        document.getElementById('view-container').style.display = mode==='view'?'block':'none';
-        document.getElementById('edit-container').style.display = mode==='edit'?'flex':'none';
-        document.getElementById('mode-view').style.background = mode==='view'?'#4daafc':'#333';
-        document.getElementById('mode-edit').style.background = mode==='edit'?'#4daafc':'#333';
-        document.getElementById('mode-view').style.color = mode==='view'?'#fff':'#ccc';
-        document.getElementById('mode-edit').style.color = mode==='edit'?'#fff':'#ccc';
-    }
-
-    function addBlock(type) {
-        let name = '休息', dur = 10;
-        if(type === 'class') {
-            const cnt = blocks.filter(b=>b.type==='class').length + 1;
-            name = `第 ${cnt} 节课`; dur = 50;
-        } else if(type === 'big') { name = '大休息'; dur = 60; }
-        blocks.push({ type, name, duration: dur });
-        recalc();
-        setTimeout(() => document.getElementById('edit-container').scrollTop = 9999, 50);
-    }
-    function delBlock(i) { blocks.splice(i, 1); recalc(); }
-    function updateBlock(i, k, v) { if(k==='duration') v=parseInt(v); blocks[i][k]=v; recalc(); }
-    function updateStartTime() { startTime = document.getElementById('start-time').value; recalc(); }
-
-    // --- DRAG & DROP ---
-    let dragIdx = null;
-    function dragStart(e) { dragIdx = this.dataset.index; e.dataTransfer.effectAllowed='move'; }
-    function dragOver(e) { e.preventDefault(); return false; }
-    function drop(e) {
-        e.stopPropagation();
-        const targetIdx = this.dataset.index;
-        if(dragIdx !== targetIdx) {
-            const item = blocks.splice(dragIdx, 1)[0];
-            blocks.splice(targetIdx, 0, item);
-            recalc();
-        }
-        return false;
-    }
-
-    // --- TIMER ---
-    let lastIdx = -1;
-    function tick() {
-        const now = new Date();
-        let cur = null, idx = -1;
-        for(let i=0; i<schedule.length; i++) {
-            if(now >= schedule[i].start && now < schedule[i].end) { cur = schedule[i]; idx = i; break; }
-        }
-        document.querySelectorAll('.sched-item').forEach(e => e.classList.remove('active', 'active-break'));
-        const badge = document.getElementById('status-badge');
-        const timer = document.getElementById('timer-num');
-        const label = document.getElementById('timer-text');
-        const bar = document.getElementById('progress-fill');
-
+    function tick(now) {
+        let cur=null, idx=-1;
+        for(let i=0; i<schedule.length; i++) { if(now>=schedule[i].start && now<schedule[i].end) { cur=schedule[i]; idx=i; break; } }
+        document.querySelectorAll('.sched-item').forEach(e=>e.classList.remove('active'));
+        const tNum=document.getElementById('timer-num'), tTxt=document.getElementById('timer-text'), tag=document.getElementById('status-tag'), bar=document.getElementById('progress-fill');
         if(cur) {
-            const row = document.getElementById(`sched-${idx}`);
-            if(row) {
-                row.classList.add(cur.type==='class'?'active':'active-break');
-                if(idx !== lastIdx) row.scrollIntoView({behavior:'smooth', block:'center'});
-            }
-            badge.innerText = cur.type==='class'?'🧠 学习中':'☕ 休息中';
-            badge.style.background = cur.type==='class'?'#4daafc':'#81c995';
-            badge.style.color = cur.type==='class'?'#fff':'#000';
-            timer.innerText = msToStr(cur.end - now);
-            label.innerText = `距离 ${cur.name} 结束`;
-            bar.style.width = ((now - cur.start)/(cur.end - cur.start)*100) + '%';
-            if(idx !== lastIdx && lastIdx !== -1) playBell();
-            lastIdx = idx;
-        } else {
-            badge.innerText = "等待中"; badge.style.background='#333'; badge.style.color='#aaa';
-            bar.style.width = '0%';
-            if(schedule.length && now < schedule[0].start) {
-                timer.innerText = msToStr(schedule[0].start - now); label.innerText="距离开始";
-            } else { timer.innerText = "END"; label.innerText="今日结束"; }
-        }
+            const r = document.getElementById(`sched-${idx}`); if(r) r.classList.add('active');
+            const diff = cur.end - now;
+            const m=Math.floor(diff/60000), s=Math.floor((diff%60000)/1000);
+            tNum.innerText = `-${pad(m)}:${pad(s)}`; tTxt.innerText = `距离 ${cur.name} 结束`;
+            tag.innerText = cur.type==='class'?'专注中':'休息中'; tag.className = `status-pill ${cur.type==='class'?'active':'break'}`;
+            bar.style.width = ((now-cur.start)/(cur.end-cur.start)*100)+'%';
+            if(idx!==lastIdx && lastIdx!==-1 && audioEnabled) document.getElementById('bell-audio').play();
+            lastIdx=idx;
+        } else { tNum.innerText = "--:--"; tTxt.innerText="等待中..."; tag.innerText="待机"; tag.className="status-pill"; bar.style.width="0%"; }
     }
 
-    // --- AUDIO & TODO ---
-    function enableAudio() {
-        const a = document.getElementById('bell-audio');
-        a.play().then(()=>{
-            a.pause(); a.currentTime=0; audioEnabled=true;
-            document.getElementById('bell-indicator').innerHTML = "🔔 铃声已就绪";
-            document.getElementById('bell-indicator').style.color = "#81c995";
-            playBell();
-        }).catch(()=>alert("请点击页面允许声音播放"));
+    // --- Video ---
+    function toggleVideoSet() { document.getElementById('video-settings').classList.toggle('show'); }
+    function toggleEmbedMode() {
+        isCodeMode = !isCodeMode;
+        document.getElementById('input-mode-link').style.display = isCodeMode ? 'none' : 'block';
+        document.getElementById('input-mode-code').style.display = isCodeMode ? 'block' : 'none';
+        document.getElementById('mode-switch-txt').innerText = isCodeMode ? '切换回：链接模式' : '切换到：嵌入代码模式';
     }
-    function playBell() { if(audioEnabled) document.getElementById('bell-audio').play(); }
-    function uploadAudio(i) {
-        if(i.files[0]) {
-            document.getElementById('bell-audio').src = URL.createObjectURL(i.files[0]);
-            document.getElementById('audio-name').innerText = "当前: " + i.files[0].name;
-            if(audioEnabled) playBell();
+    function loadEmbedCode() {
+        const code = document.getElementById('video-code').value;
+        if(code) document.getElementById('video-box').innerHTML = code;
+    }
+    function loadVideo(u) {
+        const url = u || document.getElementById('video-url').value; if(!url) return;
+        localStorage.setItem('v16_video', url);
+        const box = document.getElementById('video-box'); let c = "";
+        if(url.includes('bilibili')||url.startsWith('BV')) { 
+            const b = url.match(/BV\w+/); if(b) c=`<iframe src="//player.bilibili.com/player.html?isOutside=true&bvid=${b[0]}&page=1&high_quality=1&danmaku=0&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>`; 
+        } else if(url.includes('youtu')) { 
+            let v=""; try{if(url.includes('v='))v=url.split('v=')[1].split('&')[0];else if(url.includes('.be/'))v=url.split('.be/')[1].split('?')[0];}catch(e){} 
+            if(v) c=`<iframe src="https://www.youtube-nocookie.com/embed/${v}?autoplay=1&mute=1&loop=1&playlist=${v}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`; 
         }
+        if(c) box.innerHTML = c;
     }
-    function setOnlineAudio(u) {
-        if(!u) return;
-        document.getElementById('bell-audio').src = u;
-        localStorage.setItem('v7_audio_url', u);
-        document.getElementById('audio-name').innerText = "当前: 在线链接";
+    function renderPresets() {
+        const c=document.getElementById('preset-list'); c.innerHTML='';
+        presets.forEach((p,i)=>{ const s=document.createElement('span'); s.className='preset-tag'; s.innerHTML=`<span onclick="loadVideo('${p.url}')">▶ ${p.name}</span> <span style="color:#666" onclick="presets.splice(${i},1);localStorage.setItem('v16_presets',JSON.stringify(presets));renderPresets()">×</span>`; c.appendChild(s); });
     }
-    function loadTodos() {
-        const t = JSON.parse(localStorage.getItem('v7_todos')) || [];
-        const el = document.getElementById('todo-container');
-        el.innerHTML = '';
-        t.forEach((item, i) => {
-            const div = document.createElement('div');
-            div.className = `todo-row ${item.done?'done':''}`;
-            div.innerHTML = `<span onclick="toggleTodo(${i})" style="cursor:pointer;flex:1;">${item.text}</span><button class="btn-danger" onclick="delTodo(${i})">×</button>`;
-            el.appendChild(div);
-        });
+    function addPreset() { const u=document.getElementById('video-url').value; if(u) { const n=prompt("名称:", "新预设"); if(n) { presets.push({name:n,url:u}); localStorage.setItem('v16_presets',JSON.stringify(presets)); renderPresets(); } } }
+
+    // --- Audio & Utils ---
+    function setVolume(val) { document.getElementById('bell-audio').volume = val; localStorage.setItem('v16_vol', val); }
+    function enableAudio() { const a=document.getElementById('bell-audio'); a.play().then(()=>{a.pause();a.currentTime=0;audioEnabled=true;document.getElementById('bell-status').innerText="🔔 已开启";document.getElementById('bell-status').style.color="#81c995";}); }
+    function upAudio(f) { if(f.files[0]){ const u = URL.createObjectURL(f.files[0]); document.getElementById('bell-audio').src=u; document.getElementById('audio-current').innerText="当前: 本地上传 (临时)"; if(audioEnabled)document.getElementById('bell-audio').play(); } }
+    function setOnlineAudio(url) {
+        if(!url) return;
+        document.getElementById('bell-audio').src = url;
+        localStorage.setItem('v16_audio_url', url);
+        document.getElementById('audio-current').innerText = "当前: 自定义直链";
+        if(audioEnabled) document.getElementById('bell-audio').play();
     }
-    function addTodo() {
-        const v = document.getElementById('todo-input').value.trim();
-        if(!v) return;
-        const t = JSON.parse(localStorage.getItem('v7_todos')) || [];
-        t.push({text:v, done:false});
-        localStorage.setItem('v7_todos', JSON.stringify(t));
-        document.getElementById('todo-input').value=''; loadTodos();
+
+    // --- Data Export/Import ---
+    function exportData() {
+        const data = { blocks, presets, startTime, todos: JSON.parse(localStorage.getItem('v16_todos')||'[]'), audioUrl: localStorage.getItem('v16_audio_url') };
+        const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = "study-clock-backup.json"; a.click();
     }
-    function toggleTodo(i) {
-        const t = JSON.parse(localStorage.getItem('v7_todos')); t[i].done=!t[i].done;
-        localStorage.setItem('v7_todos', JSON.stringify(t)); loadTodos();
+    function importData(input) {
+        if(!input.files[0]) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if(data.blocks) localStorage.setItem('v16_blocks', JSON.stringify(data.blocks));
+                if(data.presets) localStorage.setItem('v16_presets', JSON.stringify(data.presets));
+                if(data.startTime) localStorage.setItem('v16_start', data.startTime);
+                if(data.todos) localStorage.setItem('v16_todos', JSON.stringify(data.todos));
+                if(data.audioUrl) localStorage.setItem('v16_audio_url', data.audioUrl);
+                alert("导入成功，即将刷新...");
+                location.reload();
+            } catch(err) { alert("文件格式错误"); }
+        };
+        reader.readAsText(input.files[0]);
     }
-    function delTodo(i) {
-        const t = JSON.parse(localStorage.getItem('v7_todos')); t.splice(i,1);
-        localStorage.setItem('v7_todos', JSON.stringify(t)); loadTodos();
-    }
-    function pad(n) { return n<10?'0'+n:n; }
-    function formatTime(d) { return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
-    function msToStr(ms) {
-        const s = Math.floor(ms/1000); if(s<0) return "00:00";
-        return `${pad(Math.floor(s/60))}:${pad(s%60)}`;
-    }
+
+    function toggleEdit() { const v=document.getElementById('view-box'), e=document.getElementById('edit-box'), b=document.getElementById('edit-btn'); if(v.style.display==='none'){ v.style.display='block'; e.classList.remove('show'); b.innerText='✎ 编辑'; } else{ v.style.display='none'; e.classList.add('show'); b.innerText='👁 完成'; } }
+    function addBlock(t) { blocks.push({type:t, name:t==='class'?'课程':(t==='big'?'大休':'休息'), duration:t==='class'?50:(t==='big'?60:10)}); recalc(); }
+    function loadTodos(){ const t=JSON.parse(localStorage.getItem('v16_todos'))||[]; const c=document.getElementById('todo-list'); c.innerHTML=''; t.forEach((x,i)=>{ const d=document.createElement('div'); d.className=`todo-item ${x.done?'done':''}`; d.innerHTML=`<span style="flex:1;cursor:pointer" onclick="togT(${i})">${x.text}</span><button class="btn-ghost" style="padding:2px 6px;" onclick="delT(${i})">×</button>`; c.appendChild(d); }); }
+    function addTodo(){ const v=document.getElementById('todo-input').value; if(v){ const t=JSON.parse(localStorage.getItem('v16_todos'))||[]; t.push({text:v,done:false}); localStorage.setItem('v16_todos',JSON.stringify(t)); document.getElementById('todo-input').value=''; loadTodos(); }}
+    function togT(i){ const t=JSON.parse(localStorage.getItem('v16_todos')); t[i].done=!t[i].done; localStorage.setItem('v16_todos',JSON.stringify(t)); loadTodos(); }
+    function delT(i){ const t=JSON.parse(localStorage.getItem('v16_todos')); t.splice(i,1); localStorage.setItem('v16_todos',JSON.stringify(t)); loadTodos(); }
+    function pad(n){return n<10?'0'+n:n} function fmt(d){return `${pad(d.getHours())}:${pad(d.getMinutes())}`}
 </script>
 </body>
 </html>
